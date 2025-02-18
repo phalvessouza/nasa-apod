@@ -2,7 +2,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const ApodImage = ({ url, title }) => <img src={url} alt={title} style={{ maxWidth: '100%' }} />;
+const ApodImage = ({ url, title }) => (
+  <img src={url} alt={title} style={{ maxWidth: '100%' }} />
+);
 
 ApodImage.propTypes = {
   url: PropTypes.string.isRequired,
