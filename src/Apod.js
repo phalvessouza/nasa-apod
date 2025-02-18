@@ -1,41 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import dayjs from 'dayjs';
 import ApodTitle from './components/ApodTitle';
 import ApodImage from './components/ApodImage';
+import ApodVideo from './components/ApodVideo'; // Novo componente para vídeos
 import ApodExplanation from './components/ApodExplanation';
+import NavigationButton from './components/NavigationButton';
 import { ClipLoader } from 'react-spinners';
-import dayjs from 'dayjs';
+import useApod from './hooks/useApod';
 
 const Apod = () => {
-  const [apod, setApod] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
-
-  useEffect(() => {
-    const fetchApod = async () => {
-      try {
-        const response = await axios.get(
-          `https://api.nasa.gov/planetary/apod?api_key=${process.env.REACT_APP_NASA_API_KEY}&date=${date}`,
-        );
-        setApod(response.data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApod();
-  }, [date]);
+  const { apod, loading, error, date, setDate } = useApod(dayjs().format('YYYY-MM-DD'));
+  const today = dayjs().format('YYYY-MM-DD');
 
   const handlePreviousDay = () => {
     setDate(dayjs(date).subtract(1, 'day').format('YYYY-MM-DD'));
   };
 
   const handleNextDay = () => {
-    setDate(dayjs(date).add(1, 'day').format('YYYY-MM-DD'));
+    if (!dayjs(date).isSame(today, 'day')) {
+      setDate(dayjs(date).add(1, 'day').format('YYYY-MM-DD'));
+    }
   };
+
+  const isNextDayDisabled = dayjs(date).isSame(today, 'day');
+  console.log('isNextDayDisabled:', isNextDayDisabled);
 
   if (loading) return <ClipLoader color="#00BFFF" loading={loading} size={150} />;
   if (error) return <div>Error: {error}</div>;
@@ -44,10 +32,16 @@ const Apod = () => {
     <div className="Apod">
       <ApodTitle title={apod.title} />
       <p>{apod.date}</p>
-      <ApodImage url={apod.url} title={apod.title} />
+      {apod.media_type === 'video' ? (
+        <ApodVideo url={apod.url} title={apod.title} />
+      ) : (
+        <ApodImage url={apod.url} title={apod.title} />
+      )}
       <ApodExplanation explanation={apod.explanation} />
-      <button onClick={handlePreviousDay}>Previous Day</button>
-      <button onClick={handleNextDay}>Next Day</button>
+      <NavigationButton onClick={handlePreviousDay}>Previous Day</NavigationButton>
+      <NavigationButton onClick={handleNextDay} disabled={isNextDayDisabled}>
+        Next Day
+      </NavigationButton>
     </div>
   );
 };
